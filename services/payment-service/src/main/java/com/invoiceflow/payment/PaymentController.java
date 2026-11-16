@@ -1,0 +1,2 @@
+package com.invoiceflow.payment;import java.util.*;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.web.bind.annotation.*;
+@RestController @RequestMapping("/payments") public class PaymentController{private final JdbcTemplate jdbc;public PaymentController(JdbcTemplate j){jdbc=j;}@GetMapping public List<Map<String,Object>> all(){return jdbc.queryForList("SELECT * FROM payments ORDER BY disbursed_at DESC");}}

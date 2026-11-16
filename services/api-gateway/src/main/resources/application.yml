@@ -1,0 +1,35 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        - id: invoice-service
+          uri: ${INVOICE_SERVICE_URL:http://localhost:8081}
+          predicates: [ Path=/api/invoices/** ]
+          filters: [ StripPrefix=1 ]
+        - id: party-service
+          uri: ${PARTY_SERVICE_URL:http://localhost:8086}
+          predicates: [ Path=/api/parties/** ]
+          filters: [ StripPrefix=1 ]
+        - id: dashboard-service
+          uri: ${READ_MODEL_SERVICE_URL:http://localhost:8088}
+          predicates: [ Path=/api/dashboard/** ]
+          filters: [ StripPrefix=1 ]
+        - id: identity-service
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8087}
+          predicates: [ Path=/api/auth/** ]
+          filters: [ StripPrefix=1 ]
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

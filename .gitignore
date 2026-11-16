@@ -1,0 +1,13 @@
+.env
+node_modules/
+dist/
+target/
+.idea/
+.vscode/
+.DS_Store
+*.log
+.metals/
+.bloop/
+**/data/
+*.mv.db
+*.trace.db

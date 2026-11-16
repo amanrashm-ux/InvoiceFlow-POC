@@ -1,0 +1,140 @@
+name: invoiceflow-poc
+x-rabbit-env: &rabbit_env
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_PORT: 5672
+  SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-invoiceflow}
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-change-this-rabbit-password}
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-invoiceflow}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-change-this-rabbit-password}
+    ports: ["5672:5672", "15672:15672"]
+    volumes: ["rabbitmq_data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  invoice-service:
+    build: ../services/invoice-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/invoice_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["invoice_data:/data"]
+    ports: ["8081:8081"]
+
+  risk-service:
+    build: ../services/risk-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/risk_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["risk_data:/data"]
+    ports: ["8082:8082"]
+
+  financing-service:
+    build: ../services/financing-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/financing_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["financing_data:/data"]
+    ports: ["8083:8083"]
+
+  payment-service:
+    build: ../services/payment-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/payment_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["payment_data:/data"]
+    ports: ["8084:8084"]
+
+  reconciliation-service:
+    build: ../services/reconciliation-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/reconciliation_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["reconciliation_data:/data"]
+    ports: ["8085:8085"]
+
+  party-service:
+    build: ../services/party-service
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/party_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    volumes: ["party_data:/data"]
+    ports: ["8086:8086"]
+
+  read-model-service:
+    build: ../services/read-model-service
+    environment:
+      <<: *rabbit_env
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/read_model_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+    volumes: ["read_model_data:/data"]
+    ports: ["8088:8088"]
+
+  identity-service:
+    build: ../services/identity-service
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/identity_db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ""
+    volumes: ["identity_data:/data"]
+    ports: ["8087:8087"]
+
+  api-gateway:
+    build: ../services/api-gateway
+    environment:
+      INVOICE_SERVICE_URL: http://invoice-service:8081
+      PARTY_SERVICE_URL: http://party-service:8086
+      READ_MODEL_SERVICE_URL: http://read-model-service:8088
+      IDENTITY_SERVICE_URL: http://identity-service:8087
+    depends_on:
+      - invoice-service
+      - party-service
+      - read-model-service
+      - identity-service
+    ports: ["8080:8080"]
+
+  frontend:
+    build: ../frontend
+    depends_on: [api-gateway]
+    ports: ["3000:80"]
+
+volumes:
+  rabbitmq_data:
+  invoice_data:
+  risk_data:
+  financing_data:
+  payment_data:
+  reconciliation_data:
+  party_data:
+  read_model_data:
+  identity_data:

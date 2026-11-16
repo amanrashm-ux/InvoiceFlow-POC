@@ -1,0 +1,2 @@
+package com.invoiceflow.reconciliation;import java.util.*;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.web.bind.annotation.*;
+@RestController @RequestMapping("/reconciliations") public class ReconciliationController{private final JdbcTemplate jdbc;public ReconciliationController(JdbcTemplate j){jdbc=j;}@GetMapping public List<Map<String,Object>> all(){return jdbc.queryForList("SELECT * FROM reconciliations ORDER BY reconciled_at DESC");}}
