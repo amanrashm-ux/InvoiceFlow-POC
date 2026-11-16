@@ -1,1 +1,16 @@
-CREATE TABLE IF NOT EXISTS domain_event_log(event_id VARCHAR(40) PRIMARY KEY,event_type VARCHAR(120),aggregate_id VARCHAR(80),occurred_at VARCHAR(40),payload CLOB,received_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS domain_event_log
+(
+    event_id
+    VARCHAR
+(
+    40
+) PRIMARY KEY,event_type VARCHAR
+(
+    120
+),aggregate_id VARCHAR
+(
+    80
+),occurred_at VARCHAR
+(
+    40
+),payload CLOB,received_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP);
