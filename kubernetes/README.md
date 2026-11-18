@@ -1,6 +1,6 @@
 # Kubernetes migration (later phase)
 
-Do not add Kubernetes to the first two-day POC. Migration outline:
+Not adding Kubernetes to the POC. Migration outline:
 - one Deployment + ClusterIP Service per independently deployable application;
 - ConfigMaps for non-secret configuration and Secrets/external secret manager for credentials;
 - liveness/readiness probes from Spring Boot Actuator;
